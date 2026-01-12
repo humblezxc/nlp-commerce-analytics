@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import sequelize from './config/database.js';
+import './models/index.js';
 
 dotenv.config();
 
