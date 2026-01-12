@@ -1,0 +1,14 @@
+{
+  "name": "ecommerce-reports-backend",
+  "version": "1.0.0",
+  "description": "Backend API for E-commerce Report Generator PoC",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": ["ecommerce", "reports", "api"],
+  "author": "",
+  "license": "ISC",
+  "type": "module"
+}
