@@ -7,8 +7,18 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js"
   },
-  "keywords": ["ecommerce", "reports", "api"],
+  "keywords": [
+    "ecommerce",
+    "reports",
+    "api"
+  ],
   "author": "",
   "license": "ISC",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0"
+  }
 }
