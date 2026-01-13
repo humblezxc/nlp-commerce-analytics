@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import sequelize from './config/database.js';
 import './models/index.js';
 import seedDatabase from './config/seed.js';
+import authRoutes from './routes/auth.js';
 
 dotenv.config();
 
@@ -21,6 +22,8 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+app.use('/api/auth', authRoutes);
 
 const startServer = async () => {
   try {
