@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import sequelize from './config/database.js';
 import './models/index.js';
+import seedDatabase from './config/seed.js';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ const startServer = async () => {
     console.log('Database connected');
     await sequelize.sync();
     console.log('Database synchronized');
+    await seedDatabase();
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
