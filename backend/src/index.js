@@ -6,6 +6,8 @@ import sequelize from './config/database.js';
 import './models/index.js';
 import seedDatabase from './config/seed.js';
 import authRoutes from './routes/auth.js';
+import storesRoutes from './routes/stores.js';
+import ordersRoutes from './routes/orders.js';
 
 dotenv.config();
 
@@ -24,6 +26,8 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/stores', storesRoutes);
+app.use('/api/orders', ordersRoutes);
 
 const startServer = async () => {
   try {
