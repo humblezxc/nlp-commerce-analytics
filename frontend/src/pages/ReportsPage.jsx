@@ -300,22 +300,22 @@ function ReportsPage() {
 
           {reportResult && (
             <Card>
-              <CardHeader className="flex flex-row items-start justify-between">
-                <div>
+              <CardHeader className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div className="min-w-0 flex-1">
                   <CardTitle>Report Results</CardTitle>
-                  <CardDescription>
+                  <CardDescription className="break-words">
                     {reportResult.requestType === 'template'
                       ? reportResult.templateName
                       : `"${reportResult.queryText?.slice(0, 50)}${reportResult.queryText?.length > 50 ? '...' : ''}"`
                     }
                     {reportResult.metadata?.dateRange && (
-                      <span> · {reportResult.metadata.dateRange.from} to {reportResult.metadata.dateRange.to}</span>
+                      <span className="block sm:inline"> · {reportResult.metadata.dateRange.from} to {reportResult.metadata.dateRange.to}</span>
                     )}
-                    <span className="ml-2">· {reportResult.metadata?.rowCount || 0} rows</span>
+                    <span className="sm:ml-2">· {reportResult.metadata?.rowCount || 0} rows</span>
                   </CardDescription>
                 </div>
                 {reportResult.data?.length > 0 && (
-                  <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                  <Button variant="outline" size="sm" onClick={handleExportCSV} className="shrink-0 w-full sm:w-auto">
                     <Download className="h-4 w-4 mr-2" />
                     Export CSV
                   </Button>

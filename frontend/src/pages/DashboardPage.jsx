@@ -111,14 +111,14 @@ function DashboardPage() {
           <CardContent>
             <div className="space-y-4">
               {stats.topProducts.map((product, index) => (
-                <div key={product.name} className="flex items-center justify-between">
+                <div key={product.name} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-muted-foreground w-6">
                       #{index + 1}
                     </span>
                     <span className="font-medium">{product.name}</span>
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm text-muted-foreground pl-9 sm:pl-0">
                     {product.quantity} sold · ${product.revenue.toFixed(2)}
                   </div>
                 </div>
