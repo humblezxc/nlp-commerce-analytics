@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/useToast';
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -30,9 +31,20 @@ function LoginPage() {
 
     try {
       await login(username, password);
+      toast({
+        title: 'Welcome back!',
+        description: 'You have successfully signed in.',
+        variant: 'success',
+      });
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
+      const errorMessage = err.response?.data?.error || 'Login failed. Please try again.';
+      setError(errorMessage);
+      toast({
+        title: 'Login failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }

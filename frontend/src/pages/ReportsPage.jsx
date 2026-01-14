@@ -9,6 +9,7 @@ import api from '@/services/api';
 import ReportChart from '@/components/ReportChart';
 import ReportStats from '@/components/ReportStats';
 import ReportTable from '@/components/ReportTable';
+import { toast } from '@/hooks/useToast';
 import {
   BarChart3,
   Package,
@@ -100,14 +101,29 @@ function ReportsPage() {
         templateName: selectedTemplate?.name,
         queryText: nlQuery
       });
+      toast({
+        title: 'Report generated',
+        description: `Successfully generated ${response.data.metadata?.rowCount || 0} rows of data.`,
+        variant: 'success',
+      });
     } catch (err) {
       const errorMessage = err.response?.data?.error || 'Failed to generate report';
       const errorCode = err.response?.data?.code;
 
       if (errorCode === 'AI_NOT_CONFIGURED') {
         setError('AI service is not configured. Please add your OpenAI API key or use templates instead.');
+        toast({
+          title: 'AI not configured',
+          description: 'Please add your OpenAI API key or use templates instead.',
+          variant: 'destructive',
+        });
       } else {
         setError(errorMessage);
+        toast({
+          title: 'Report generation failed',
+          description: errorMessage,
+          variant: 'destructive',
+        });
       }
     } finally {
       setLoading(false);
@@ -138,6 +154,11 @@ function ReportsPage() {
     a.download = `report-${reportResult.metadata?.type || 'data'}-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    toast({
+      title: 'Export complete',
+      description: 'Report data has been downloaded as CSV.',
+      variant: 'success',
+    });
   };
 
   const canGenerate = activeTab === 'templates'
