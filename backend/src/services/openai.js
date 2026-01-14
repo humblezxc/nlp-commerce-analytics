@@ -1,8 +1,18 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+let openai = null;
+
+function getOpenAIClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    return null;
+  }
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+  }
+  return openai;
+}
 
 const SYSTEM_PROMPT = `You are a SQL query generator for an e-commerce analytics system.
 You must generate valid SQLite queries based on user requests.
@@ -33,11 +43,12 @@ User: "List all orders over $100"
 SQL: SELECT id, customer_name, order_date, total_amount FROM orders WHERE store_id = :storeId AND total_amount > 100 ORDER BY order_date DESC`;
 
 export async function generateSqlFromNaturalLanguage(query, storeId) {
-  if (!process.env.OPENAI_API_KEY) {
+  const client = getOpenAIClient();
+  if (!client) {
     throw new Error('OpenAI API key not configured');
   }
 
-  const completion = await openai.chat.completions.create({
+  const completion = await client.chat.completions.create({
     model: 'gpt-3.5-turbo',
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
