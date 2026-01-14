@@ -5,6 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import api from '@/services/api';
+import ReportChart from '@/components/ReportChart';
+import ReportStats from '@/components/ReportStats';
+import ReportTable from '@/components/ReportTable';
 import {
   BarChart3,
   Package,
@@ -13,7 +17,9 @@ import {
   Calendar,
   Loader2,
   MessageSquare,
-  Sparkles
+  Sparkles,
+  Download,
+  AlertCircle
 } from 'lucide-react';
 
 const reportTemplates = [
@@ -38,7 +44,7 @@ const reportTemplates = [
   {
     id: 'revenue_by_period',
     name: 'Revenue by Period',
-    description: 'Revenue breakdown by day, week, or month',
+    description: 'Revenue breakdown by day',
     icon: TrendingUp
   }
 ];
@@ -47,8 +53,7 @@ const exampleQueries = [
   "Show me total sales for the last 7 days",
   "What are my top 5 selling products?",
   "List all orders over $100",
-  "Compare revenue this month vs last month",
-  "Which customers bought the most?"
+  "Revenue by day for the past month"
 ];
 
 const MAX_QUERY_LENGTH = 500;
@@ -60,11 +65,13 @@ function ReportsPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [loading, setLoading] = useState(false);
-  const [reportData, setReportData] = useState(null);
+  const [error, setError] = useState(null);
+  const [reportResult, setReportResult] = useState(null);
 
   const handleTemplateSelect = (template) => {
     setSelectedTemplate(template);
-    setReportData(null);
+    setReportResult(null);
+    setError(null);
   };
 
   const handleExampleClick = (query) => {
@@ -78,23 +85,84 @@ function ReportsPage() {
     if (!isTemplate && !nlQuery.trim()) return;
 
     setLoading(true);
-    setReportData(null);
+    setReportResult(null);
+    setError(null);
 
-    setTimeout(() => {
-      setLoading(false);
-      setReportData({
-        type: isTemplate ? 'template' : 'nlp',
-        template: selectedTemplate,
-        query: nlQuery,
-        dateFrom,
-        dateTo
+    try {
+      const payload = isTemplate
+        ? { type: 'template', templateId: selectedTemplate.id, dateFrom, dateTo }
+        : { type: 'nlp', query: nlQuery.trim(), dateFrom, dateTo };
+
+      const response = await api.post('/reports/generate', payload);
+      setReportResult({
+        ...response.data,
+        requestType: isTemplate ? 'template' : 'nlp',
+        templateName: selectedTemplate?.name,
+        queryText: nlQuery
       });
-    }, 1500);
+    } catch (err) {
+      const errorMessage = err.response?.data?.error || 'Failed to generate report';
+      const errorCode = err.response?.data?.code;
+
+      if (errorCode === 'AI_NOT_CONFIGURED') {
+        setError('AI service is not configured. Please add your OpenAI API key or use templates instead.');
+      } else {
+        setError(errorMessage);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (!reportResult?.data || reportResult.data.length === 0) return;
+
+    const headers = Object.keys(reportResult.data[0]);
+    const csvContent = [
+      headers.join(','),
+      ...reportResult.data.map(row =>
+        headers.map(h => {
+          const val = row[h];
+          if (typeof val === 'string' && val.includes(',')) {
+            return `"${val}"`;
+          }
+          return val;
+        }).join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `report-${reportResult.metadata?.type || 'data'}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const canGenerate = activeTab === 'templates'
     ? !!selectedTemplate
     : nlQuery.trim().length > 0;
+
+  const renderVisualization = () => {
+    if (!reportResult?.data) return null;
+
+    const { chartType } = reportResult.metadata || {};
+
+    if (chartType === 'stats') {
+      return <ReportStats data={reportResult.data} />;
+    }
+
+    if (chartType === 'table') {
+      return <ReportTable data={reportResult.data} />;
+    }
+
+    if (chartType === 'bar' || chartType === 'line' || chartType === 'pie') {
+      return <ReportChart type={chartType} data={reportResult.data} />;
+    }
+
+    return <ReportTable data={reportResult.data} />;
+  };
 
   return (
     <div className="space-y-6">
@@ -195,29 +263,50 @@ function ReportsPage() {
             </CardContent>
           </Card>
 
-          {reportData && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Report Results</CardTitle>
-                <CardDescription>
-                  {reportData.type === 'template'
-                    ? reportData.template.name
-                    : `"${reportData.query.slice(0, 50)}${reportData.query.length > 50 ? '...' : ''}"`
-                  }
-                  {reportData.dateFrom && reportData.dateTo && (
-                    <span> · {reportData.dateFrom} to {reportData.dateTo}</span>
-                  )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-center h-48 text-muted-foreground border border-dashed rounded-lg">
-                  Report visualization will appear here
+          {error && (
+            <Card className="border-destructive">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-destructive">Error generating report</p>
+                    <p className="text-sm text-muted-foreground mt-1">{error}</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {!reportData && !loading && (
+          {reportResult && (
+            <Card>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle>Report Results</CardTitle>
+                  <CardDescription>
+                    {reportResult.requestType === 'template'
+                      ? reportResult.templateName
+                      : `"${reportResult.queryText?.slice(0, 50)}${reportResult.queryText?.length > 50 ? '...' : ''}"`
+                    }
+                    {reportResult.metadata?.dateRange && (
+                      <span> · {reportResult.metadata.dateRange.from} to {reportResult.metadata.dateRange.to}</span>
+                    )}
+                    <span className="ml-2">· {reportResult.metadata?.rowCount || 0} rows</span>
+                  </CardDescription>
+                </div>
+                {reportResult.data?.length > 0 && (
+                  <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export CSV
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                {renderVisualization()}
+              </CardContent>
+            </Card>
+          )}
+
+          {!reportResult && !loading && !error && (
             <Card>
               <CardContent className="py-12">
                 <div className="flex flex-col items-center justify-center text-center">
