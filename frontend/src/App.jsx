@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/hooks/useAuth';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import DashboardLayout from '@/components/DashboardLayout';
 import LoginPage from '@/pages/LoginPage';
+import DashboardPage from '@/pages/DashboardPage';
 
 function App() {
   return (
@@ -14,7 +16,9 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <div className="p-8">Dashboard (coming soon)</div>
+                <DashboardLayout>
+                  <DashboardPage />
+                </DashboardLayout>
               </ProtectedRoute>
             }
           />
@@ -22,7 +26,9 @@ function App() {
             path="/reports"
             element={
               <ProtectedRoute>
-                <div className="p-8">Reports (coming soon)</div>
+                <DashboardLayout>
+                  <div className="text-muted-foreground">Reports page (coming soon)</div>
+                </DashboardLayout>
               </ProtectedRoute>
             }
           />
