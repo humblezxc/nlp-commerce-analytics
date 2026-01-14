@@ -4,6 +4,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import DashboardLayout from '@/components/DashboardLayout';
 import LoginPage from '@/pages/LoginPage';
 import DashboardPage from '@/pages/DashboardPage';
+import ReportsPage from '@/pages/ReportsPage';
 
 function App() {
   return (
@@ -27,7 +28,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                  <div className="text-muted-foreground">Reports page (coming soon)</div>
+                  <ReportsPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }
